@@ -1,0 +1,5 @@
+compile with the current directory inside your CLASSPATH:
+javac Count.java
+
+run:
+java Count test-input

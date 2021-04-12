@@ -1,0 +1,26 @@
+https://github.com/spympr/compilers-bsc
+http://cgi.di.uoa.gr/~compilers/
+https://piazza.com/class/kl9eav853vt37s?cid=43
+https://www.youtube.com/playlist?list=PLheERyVBk39QDMFxOpCu9XE3irdiRmh_j
+
+javac Mymain.java
+
+java Mymain
+
+(10-9)+(3-1)**((9-3+1)-2) 	= 33
+1 							= 1
+( 							= error
+01 							= error
+0 							= 0
+10 							= 10
+(1)1 						= error
+1+(9**1)-(9)**2+(1**0) 		= -70
+** 							= error
+(10+1-0+18)**01 			= error
+)							= error
++1+(1)								= error
+1+(1)								= 2
+0000005								= error
+10000005							= 10000005
+()									= ERROR GIA TORA
+((2-(6+8**3)))+1-(12)**(1+(5-2)) 	= -21251
