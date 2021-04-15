@@ -7,6 +7,7 @@ class Calculator {
     private InputStream in;
 
     public class ParseError extends Exception {
+        static final long serialVersionUID = 42L;
         public String getMessage() {
             return "parse errror";
         }

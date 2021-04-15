@@ -43,6 +43,7 @@ class evaluator {
     }
 
     public int eval() throws IOException, ParseError {
+        
         int value = exp();
 
         if (lookahead != -1 && lookahead != '\n' && lookahead != '\r'  && lookahead != '\0') {
