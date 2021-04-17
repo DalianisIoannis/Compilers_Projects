@@ -7,12 +7,12 @@ class Driver {
         
         System.err.println("Expression(s) separated by ';':");
         
-        Parser p = new Parser(new Scanner(new InputStreamReader(System.in)));
-        p.parse();
-
         // new File("./results").mkdirs();
         // PrintStream result = new PrintStream(new File("./results/arxeio.txt"));
         // System.setOut(result);
+        
+        Parser p = new Parser(new Scanner(new InputStreamReader(System.in)));
+        p.parse();
 
         // System.out.println( "EDO" );
     }

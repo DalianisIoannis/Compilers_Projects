@@ -1,0 +1,86 @@
+name()  {
+    "John"
+}
+
+surname() {
+    "Doe"
+}
+
+name(patata)  {
+    "John"
+}
+
+name()
+name(){}
+name() surname()
+name(){} surname()
+name(){} surname(){}
+name(patata){} surname(){}
+
+name(){} surname(){} name() surname()
+name(patata){} surname(){} name() surname()
+name(patata){} surname(geia){} name() surname()
+
+name(patata){} surname(geia){} name() surname()
+name(patata){} surname(pata, ){} name() surname()
+name(patata){} surname(pata, ){} poypoy(){} name() surname()
+
+name(patata){} surname(pata, geia){} name() surname()
+name(patata){} surname(pata, geia){} poypoy(){} name() surname()
+name(patata){} surname(pata, geia){} assfds(pata, geia, duoi){} poypoy(){} name() surname()
+
+
+name(patata){
+    "John"
+}
+
+surname(pata, geia) {
+    "Doe"
+}
+
+assfds(pata, geia, duoi) {
+    "bdks"
+}
+
+poypoy(){
+    "sadfadf"
+}
+
+name()
+surname()
+
+
+
+name(patata){
+    "John"
+}
+surname(pata, geia) {
+    "Doe"
+}
+fullname(first_name, sep, last_name) {
+    first_name + sep + last_name
+}
+name()
+nbdfjname(asdnmndas)
+
+
+name(patata){ "John" } surname(pata, geia) { "Doe" } name()
+
+
+
+
+name()  {
+    "John"
+}
+
+surname() {
+    "Doe"
+}
+
+fullname(first_name, sep, last_name) {
+    first_name + sep + last_name
+}
+
+name()
+surname()
+fullname(name(), " ", surname())

@@ -33,9 +33,7 @@ import java_cup.runtime.*;
 */
 
 %{
-    /**
-        The following two methods create java_cup.runtime.Symbol objects
-    **/
+    /** The following two methods create java_cup.runtime.Symbol objects **/
     StringBuffer stringBuffer = new StringBuffer();
     private Symbol symbol(int type) {
        return new Symbol(type, yyline, yycolumn);
@@ -47,30 +45,25 @@ import java_cup.runtime.*;
 
 /*
   Macro Declarations
-
   These declarations are regular expressions that will be used latter
   in the Lexical Rules Section.
 */
 
 /* A line terminator is a \r (carriage return), \n (line feed), or
    \r\n.*/
-
 LineTerminator = \r|\n|\r\n
-
-
-/*PROSTETHIKE otidhpote oxi sta standard*/
-Identifier = [:jlette:] [:jlettedigit:]*
-
 
 /* White space is a line terminator, space, tab, or line feed. */
 WhiteSpace     = {LineTerminator} | [ \t\f]
 
-
 /* A literal integer is is a number beginning with a number between
    one and nine followed by zero or more numbers between zero and nine
    or just a zero.  */
-
 dec_int_lit = 0 | [1-9][0-9]*
+
+/*function names*/
+String_Sentence = [:jletter:]*
+/*Identifier = [:jletter:][:jlettedigit:]*/
 
 %state STRING
 
@@ -78,22 +71,24 @@ dec_int_lit = 0 | [1-9][0-9]*
 /* ------------------------Lexical Rules Section---------------------- */
 
 <YYINITIAL> {
-/* operators */
+
+   /* operators */
    "+"            { return symbol(sym.PLUS); }
    "-"            { return symbol(sym.MINUS); }
    "**"           { return symbol(sym.EXP); }
    "("            { return symbol(sym.LPAREN); }
    ")"            { return symbol(sym.RPAREN); }
+
+   "{"            { return symbol(sym.LEFT_BRACKET); }
+   "}"            { return symbol(sym.RIGHT_BRACKET); }
+
    ";"            { return symbol(sym.SEMI); }
+   ","            { return symbol(sym.COMMA); }
    {dec_int_lit}  { return symbol(sym.NUMBER, new Integer(yytext())); }
    \"             { stringBuffer.setLength(0); yybegin(STRING); }
    {WhiteSpace}   { /* just skip what was found, do nothing */ }
-
-   "if"                 { return symbol(sym.IF); }
-   "else"               { return symbol(sym.ELSE); }
-   "is-prefix-of"       { return symbol(sym.IS_PRE); }
-   "is-suffix-of"       { return symbol(sym.IS_SUF); }
-   "}"                  { return symbol(sym.RIGHT_BRACKET); }
+   {String_Sentence}  { return symbol(sym.STR_SENS, new String(yytext())); }
+   
 }
 
 <STRING> {
@@ -107,8 +102,6 @@ dec_int_lit = 0 | [1-9][0-9]*
       \\                             { stringBuffer.append('\\'); }
 }
 
-
 /* No token was found for the input so throw an error.  Print out an
    Illegal character message with the illegal character that was found. */
-
 [^]                    { throw new Error("Illegal character <"+yytext()+">"); }

@@ -1,10 +1,8 @@
 /* Simple +/-/* expression language; parser evaluates constant expressions on the fly*/
-/** Package and Import Specifications */
-
+/* Package and Import Specifications */
 import java_cup.runtime.*;
 
 /** Usercode Components */
-
 parser code {:
     // Connect this parser to a scanner!
     Scanner s;
@@ -14,42 +12,65 @@ parser code {:
 /* define how to connect to the scanner! */
 scan with {: return s.next_token(); :};
 
-/** Symbol Lists */
+/* Symbol Lists */
 
 /* Terminals (tokens returned by the scanner). */
-terminal            SEMI, PLUS, MINUS, EXP, LPAREN, RPAREN;
-terminal            IF, ELSE, IS_PRE, IS_SUF, RIGHT_BRACKET;
+terminal            SEMI, PLUS, MINUS, EXP, LPAREN, RPAREN, LEFT_BRACKET, RIGHT_BRACKET, COMMA;
 terminal Integer    NUMBER;        // our scanner provides numbers as integers
-terminal String     STRING_LITERAL;
+terminal String     STRING_LITERAL, STR_SENS;
 
 /*  Non terminals */
 non terminal            program;
-non terminal String     expr, expr_list;      // used to store evaluated subexpressions
+non terminal String     expr, expr_list, any_string, params, func_body, call_funs, decl_funcs, call_params;      // used to store evaluated subexpressions
 
-/** Precedence Declarations */
- 
+/* Precedence Declarations */
 precedence left PLUS, MINUS;
-precedence right EXP;
+precedence right EXP/*, RPAR_LBRACK*/;
 
-/** The Grammar Rules */
+/* The Grammar Rules */
 
-program ::= expr_list:e {:
-                        System.out.println("import java.lang.Math;\n");
-                        System.out.println("public class Main {");
-                        System.out.println("\tpublic static void main(String[] args) {");
-                        System.out.printf("%s", e);
-                        System.out.println("\t}");
-                        System.out.println("}");
-			 :}
+program ::= decl_funcs:df call_funs:e SEMI   {:
+
+                                System.out.println("public class Main {");
+                                System.out.println("\tpublic static void main(String[] args) {");
+                                
+                                System.out.printf("%s", e);
+                                
+                                System.out.println("\t}\n");
+                                
+                                System.out.printf("%s", df);
+                                
+                                System.out.println("}");
+			                            :}
 	;
 
-expr_list ::= expr_list:rest expr:e SEMI    {: RESULT = String.format("%s\t\tSystem.out.println(%s);\n", rest, e); :}
-            |                               {: RESULT = ""; :}
+decl_funcs ::=  STR_SENS:an LPAREN params:p RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET                    {: RESULT = "\tpublic static String " + an + "(" + p + ") {\n\t\treturn " + fb + ";\n\t}\n"; :}΄
+    /*new*/     | STR_SENS:an LPAREN RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET                    {: RESULT = "\tpublic static String " + an + "() {\n\t\treturn " + fb + ";\n\t}\n"; :}
+                | decl_funcs:df STR_SENS:an LPAREN params:p RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET    {: RESULT = df + "\tpublic static String " + an + "(" + p + ") {\n\t\treturn " + fb + ";\n\t}\n"; :}
+    /*new*/     | decl_funcs:df STR_SENS:an LPAREN RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET    {: RESULT = df + "\tpublic static String " + an + "() {\n\t\treturn " + fb + ";\n\t}\n"; :}
+                ;
+
+call_funs ::=   STR_SENS:an LPAREN call_params:p RPAREN                   {: RESULT = "\t\tSystem.out.println(" + an + "(" + p + "));\n"; :}
+                | STR_SENS:an LPAREN RPAREN                     {: RESULT = "\t\tSystem.out.println(" + an + "());\n"; :}
+                | call_funs:cf STR_SENS:an LPAREN RPAREN        {: RESULT = cf + "\t\tSystem.out.println(" + an + "());\n"; :}
+                | call_funs:cf STR_SENS:an LPAREN call_params:p RPAREN    {: RESULT = cf + "\t\tSystem.out.println(" + an + "(" + p + "));\n"; :}
+                ;
+
+call_params     ::= STR_SENS:par LPAREN RPAREN                    {: RESULT = par + "()"; :}
+                | STRING_LITERAL:sens COMMA call_params:cp   {: RESULT = "\"" + sens + "\" ," + cp; :}
+                | STR_SENS:par22 LPAREN RPAREN COMMA call_params:cp {: RESULT = par22 + "()" + ", " + cp; :}
+                ;
+
+/*
+call_params     ::= STR_SENS:par LPAREN RPAREN COMMA STRING_LITERAL:par22 COMMA STR_SENS:par33 LPAREN RPAREN {: RESULT = par + "(), \"" + par22 + "\", " + par33 + "()"; :}
+                ;
+*/
+
+params      ::= STR_SENS:par                    {: RESULT = "String " + par; :}
+            | params:par COMMA STR_SENS:par22   {: RESULT = par + ", " + "String " + par22; :}
             ;
-expr      ::= expr:e1 PLUS  expr:e2         {: RESULT = String.format("%s + %s", e1, e2); :}
-             | expr:e1 MINUS expr:e2        {: RESULT = String.format("%s - %s", e1, e2); :}
-             | expr:e1 EXP expr:e2          {: RESULT = String.format("(int)Math.pow(%s, %s)", e1, e2); :}
-             | LPAREN expr:e RPAREN         {: RESULT = String.format("(%s)", e); :}
-             | NUMBER:n                     {: RESULT = String.format("%d", n); :}
-             | STRING_LITERAL:s             {: RESULT = String.format("Integer.parseInt(\"%s\", 16)", s); :}  
-             ;
+
+func_body   ::= STRING_LITERAL:sens                     {:RESULT = "\"" + sens + "\""; :}
+            | STR_SENS:par                              {:RESULT = par; :}
+            | func_body:par PLUS STR_SENS:par1             {:RESULT = par + " + " + par1; :}
+            ;
