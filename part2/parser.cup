@@ -15,23 +15,30 @@ scan with {: return s.next_token(); :};
 /* Symbol Lists */
 
 /* Terminals (tokens returned by the scanner). */
-terminal            SEMI, PLUS, MINUS, EXP, LPAREN, RPAREN, LEFT_BRACKET, RIGHT_BRACKET, COMMA;
+terminal            PLUS, LPAREN, RPAREN, LEFT_BRACKET, RIGHT_BRACKET, COMMA, IF, ELSE, PREFIX, SUFFIX, IDENTIFIER;
 terminal Integer    NUMBER;        // our scanner provides numbers as integers
 terminal String     STRING_LITERAL, STR_SENS;
 
 /*  Non terminals */
-non terminal            program;
-non terminal String     expr, expr_list, any_string, params, func_body, call_funs, decl_funcs, call_params;      // used to store evaluated subexpressions
+non terminal            program /*, call_params*/;
+non terminal String     params, func_body, call_funs, decl_funcs, call_params, ret_stmt, if_stmt, condition; // used to store evaluated subexpressions
 
 /* Precedence Declarations */
-precedence left PLUS, MINUS;
-precedence right EXP/*, RPAR_LBRACK*/;
+/*precedence left PLUS, MINUS;*/
+/*precedence right EXP;*/
+
+precedence left IF, ELSE;
+precedence left COMMA;
+precedence left PREFIX, SUFFIX;
+precedence left PLUS;
+precedence left LPAREN, RPAREN;
+precedence left LEFT_BRACKET, RIGHT_BRACKET;
 
 /* The Grammar Rules */
 
-program ::= decl_funcs:df call_funs:e SEMI   {:
+program ::= decl_funcs:df call_funs:e {:
 
-                                System.out.println("public class Main {");
+                                System.out.println("\n\npublic class Main {");
                                 System.out.println("\tpublic static void main(String[] args) {");
                                 
                                 System.out.printf("%s", e);
@@ -40,37 +47,71 @@ program ::= decl_funcs:df call_funs:e SEMI   {:
                                 
                                 System.out.printf("%s", df);
                                 
-                                System.out.println("}");
+                                System.out.println("}\n");
 			                            :}
 	;
 
-decl_funcs ::=  STR_SENS:an LPAREN params:p RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET                    {: RESULT = "\tpublic static String " + an + "(" + p + ") {\n\t\treturn " + fb + ";\n\t}\n"; :}΄
-    /*new*/     | STR_SENS:an LPAREN RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET                    {: RESULT = "\tpublic static String " + an + "() {\n\t\treturn " + fb + ";\n\t}\n"; :}
-                | decl_funcs:df STR_SENS:an LPAREN params:p RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET    {: RESULT = df + "\tpublic static String " + an + "(" + p + ") {\n\t\treturn " + fb + ";\n\t}\n"; :}
-    /*new*/     | decl_funcs:df STR_SENS:an LPAREN RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET    {: RESULT = df + "\tpublic static String " + an + "() {\n\t\treturn " + fb + ";\n\t}\n"; :}
+decl_funcs ::=  STR_SENS:an LPAREN params:p RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET                      {: RESULT = "\tpublic static String " + an + "(" + p + ") {\n\t\treturn " + fb + ";\n\t}\n"; :}΄
+    /*new*/     | STR_SENS:an LPAREN RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET                             {: RESULT = "\tpublic static String " + an + "() {\n\t\treturn " + fb + ";\n\t}\n"; :}
+                | decl_funcs:df STR_SENS:an LPAREN params:p RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET      {: RESULT = df + "\tpublic static String " + an + "(" + p + ") {\n\t\treturn " + fb + ";\n\t}\n"; :}
+    /*new*/     | decl_funcs:df STR_SENS:an LPAREN RPAREN LEFT_BRACKET func_body:fb RIGHT_BRACKET               {: RESULT = df + "\tpublic static String " + an + "() {\n\t\treturn " + fb + ";\n\t}\n"; :}
                 ;
 
-call_funs ::=   STR_SENS:an LPAREN call_params:p RPAREN                   {: RESULT = "\t\tSystem.out.println(" + an + "(" + p + "));\n"; :}
-                | STR_SENS:an LPAREN RPAREN                     {: RESULT = "\t\tSystem.out.println(" + an + "());\n"; :}
-                | call_funs:cf STR_SENS:an LPAREN RPAREN        {: RESULT = cf + "\t\tSystem.out.println(" + an + "());\n"; :}
-                | call_funs:cf STR_SENS:an LPAREN call_params:p RPAREN    {: RESULT = cf + "\t\tSystem.out.println(" + an + "(" + p + "));\n"; :}
-                ;
-
-call_params     ::= STR_SENS:par LPAREN RPAREN                    {: RESULT = par + "()"; :}
-                | STRING_LITERAL:sens COMMA call_params:cp   {: RESULT = "\"" + sens + "\" ," + cp; :}
-                | STR_SENS:par22 LPAREN RPAREN COMMA call_params:cp {: RESULT = par22 + "()" + ", " + cp; :}
+call_funs ::=   STR_SENS:an LPAREN call_params:p RPAREN                     {: RESULT = "\t\tSystem.out.println(" + an + "(" + p + "));\n"; :}
+                | STR_SENS:an LPAREN RPAREN                                 {: RESULT = "\t\tSystem.out.println(" + an + "());\n"; :}
+                | call_funs:cf STR_SENS:an LPAREN RPAREN                    {: RESULT = cf + "\t\tSystem.out.println(" + an + "());\n"; :}
+                | call_funs:cf STR_SENS:an LPAREN call_params:p RPAREN      {: RESULT = cf + "\t\tSystem.out.println(" + an + "(" + p + "));\n"; :}
                 ;
 
 /*
-call_params     ::= STR_SENS:par LPAREN RPAREN COMMA STRING_LITERAL:par22 COMMA STR_SENS:par33 LPAREN RPAREN {: RESULT = par + "(), \"" + par22 + "\", " + par33 + "()"; :}
+                | call_funs:cf STR_SENS:an LPAREN STR_SENS:an2 RPAREN        {: RESULT = cf + an + an2; :}
+                | STR_SENS:an LPAREN STR_SENS:p RPAREN                     {: RESULT = "\t\tSystem.out.println(" + an + "(" + p + "));\n"; :}
+                | STR_SENS:an LPAREN STR_SENS:p RPAREN                     {: RESULT = an + p; :}
+                | IDENTIFIER:par                                      {: RESULT = par; :}
+                | STR_SENS:par                                      {: RESULT = par; :}
+*/
+
+/*pairnei (())*/
+call_params     ::= STR_SENS:par LPAREN RPAREN                      {: RESULT = par + "()"; :}
+                | STR_SENS:par22 LPAREN RPAREN COMMA call_params:cp {: RESULT = par22 + "()" + ", " + cp; :}
+                | STRING_LITERAL:par                                {: RESULT = "\"" + par + "\""; :}
+                | STRING_LITERAL:sens COMMA call_params:cp          {: RESULT = "\"" + sens + "\" ," + cp; :}
+                ;
+
+/*
+call_params     ::= call_params:cp LPAREN RPAREN STR_SENS:par   {: RESULT = cp + "()" + par; :}
+                | STR_SENS:par                                 {: RESULT = par; :}
                 ;
 */
 
 params      ::= STR_SENS:par                    {: RESULT = "String " + par; :}
-            | params:par COMMA STR_SENS:par22   {: RESULT = par + ", " + "String " + par22; :}
+            | STR_SENS:par22 COMMA params:par {: RESULT = par22 + ", " + "String " + par; :}
             ;
 
-func_body   ::= STRING_LITERAL:sens                     {:RESULT = "\"" + sens + "\""; :}
-            | STR_SENS:par                              {:RESULT = par; :}
-            | func_body:par PLUS STR_SENS:par1             {:RESULT = par + " + " + par1; :}
+/*
+params      ::= STR_SENS:par                    {: RESULT = "String " + par; :}
+            | params:par COMMA STR_SENS:par22   {: RESULT = par + ", " + "String " + par22; :}
+            ;
+*/
+
+condition   ::= STR_SENS:par                    {: RESULT = par; :}
+            | STR_SENS:par PREFIX STRING_LITERAL:sens {: RESULT = "\"" + sens + "\".startsWith(" + par + ")"; :}
+            | STRING_LITERAL:sens PREFIX STR_SENS:par {: RESULT = par + ".startsWith(\"" + sens + "\")"; :}
+            | STR_SENS:par SUFFIX STRING_LITERAL:sens {: RESULT = "\"" + sens + "\".endsWith(" + par + ")"; :}
+            | STRING_LITERAL:sens SUFFIX STR_SENS:par {: RESULT = par + ".endsWith(\"" + sens + "\")"; :}
+            ;
+
+func_body   ::= ret_stmt:r {:RESULT = r; :}
+            | if_stmt:r {:RESULT = r; :}
+            ;
+
+ret_stmt ::= STRING_LITERAL:sens                         {:RESULT = "\"" + sens + "\""; :}
+            | STR_SENS:par                                  {:RESULT = par; :}
+            | ret_stmt:par PLUS STR_SENS:par1              {:RESULT = par + " + " + par1; :}
+
+            | STR_SENS:par LPAREN call_params:cp RPAREN                                  {:RESULT = par + "(" + cp + ")"; :}
+            | STR_SENS:par LPAREN RPAREN                                  {:RESULT = par + "()"; :}
+            ;
+
+if_stmt ::= IF LPAREN condition:cond RPAREN func_body:fb ELSE func_body:fb2 {:RESULT = "(" + cond + ") ? " + fb + " : " + fb2 + ""; :}
             ;

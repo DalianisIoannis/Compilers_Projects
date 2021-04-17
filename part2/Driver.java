@@ -5,7 +5,7 @@ import java.io.*;
 class Driver {
     public static void main(String[] argv) throws Exception{
         
-        System.err.println("Expression(s) separated by ';':");
+        System.err.println("Expression(s) separated by 'EOF':");
         
         // new File("./results").mkdirs();
         // PrintStream result = new PrintStream(new File("./results/arxeio.txt"));

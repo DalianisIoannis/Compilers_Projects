@@ -15,7 +15,6 @@ class evaluator {
         if (lookahead == symbol)
             lookahead = in.read();
         else {
-            System.out.println("Parse Error in Consumer");
             throw new ParseError();
         }
     }
@@ -29,16 +28,15 @@ class evaluator {
     }
 
     private static int pow(int base, int exponent) {
-        // if (exponent &lt; 0)
-        //     return 0;
+        if (exponent < 0)
+            return 0;
         if (exponent == 0)
             return 1;
         if (exponent == 1)
-            return base;    
-    
-        if (exponent % 2 == 0) //even exp -&gt; b ^ exp = (b^2)^(exp/2)
+            return base;
+        if (exponent % 2 == 0) //even exp -> b ^ exp = (b^2)^(exp/2)
             return pow(base * base, exponent/2);
-        else                   //odd exp -&gt; b ^ exp = b * (b^2)^(exp/2)
+        else                   //odd  exp -> b ^ exp = b * (b^2)^(exp/2)
             return base * pow(base * base, exponent/2);
     }
 
@@ -96,7 +94,7 @@ class evaluator {
         if(isDigit(lookahead) || lookahead=='(') {
 
             
-            int cond2 = num(0);
+            int cond2 = num();
             return term2(cond2);
         }
         
@@ -111,13 +109,18 @@ class evaluator {
                 return condition;
             case '-':
                 return condition;
+            
             case '*':
                 consume('*');
                 consume('*');
-                int cond2 = num(0); // anexartito
+
+                int cond2 = num(); // anexartito
                 // condition = (int)Math.pow(condition, cond2);
-                condition = (int)pow(condition, cond2);
-                return term2(condition);
+                int cond3 = term2(cond2);
+                // condition = (int)pow(condition, cond2);
+                // return term2(condition);
+                return (int)pow(condition, cond3);
+            
             case ')':
                 return condition;            
             case '\n':
@@ -132,7 +135,7 @@ class evaluator {
 
     }
 
-    private int num(int condition) throws IOException, ParseError {
+    private int num() throws IOException, ParseError {
 
         if(lookahead=='(') {
             consume('(');
@@ -148,7 +151,7 @@ class evaluator {
                 return 0;
             }            
             
-            return num2(condition);
+            return num2(0);
         }
         
         throw new ParseError();

@@ -53,6 +53,8 @@ import java_cup.runtime.*;
    \r\n.*/
 LineTerminator = \r|\n|\r\n
 
+Identifier = [:jletter:] [:jletterdigit:]*
+
 /* White space is a line terminator, space, tab, or line feed. */
 WhiteSpace     = {LineTerminator} | [ \t\f]
 
@@ -62,7 +64,8 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 dec_int_lit = 0 | [1-9][0-9]*
 
 /*function names*/
-String_Sentence = [:jletter:]*
+/*String_Sentence = [:jletter:]**/
+String_Sentence = [:jletter:][:jletter:]*
 /*Identifier = [:jletter:][:jlettedigit:]*/
 
 %state STRING
@@ -74,16 +77,17 @@ String_Sentence = [:jletter:]*
 
    /* operators */
    "+"            { return symbol(sym.PLUS); }
-   "-"            { return symbol(sym.MINUS); }
-   "**"           { return symbol(sym.EXP); }
    "("            { return symbol(sym.LPAREN); }
    ")"            { return symbol(sym.RPAREN); }
 
    "{"            { return symbol(sym.LEFT_BRACKET); }
    "}"            { return symbol(sym.RIGHT_BRACKET); }
 
-   ";"            { return symbol(sym.SEMI); }
    ","            { return symbol(sym.COMMA); }
+   "if"            { return symbol(sym.IF); }
+   "else"            { return symbol(sym.ELSE); }
+   "prefix"            { return symbol(sym.PREFIX); }
+   "suffix"            { return symbol(sym.SUFFIX); }
    {dec_int_lit}  { return symbol(sym.NUMBER, new Integer(yytext())); }
    \"             { stringBuffer.setLength(0); yybegin(STRING); }
    {WhiteSpace}   { /* just skip what was found, do nothing */ }
@@ -101,6 +105,8 @@ String_Sentence = [:jletter:]*
       \\\"                           { stringBuffer.append('\"'); }
       \\                             { stringBuffer.append('\\'); }
 }
+
+{Identifier} { return symbol(sym.IDENTIFIER, new String(yytext())); }
 
 /* No token was found for the input so throw an error.  Print out an
    Illegal character message with the illegal character that was found. */
