@@ -1,0 +1,124 @@
+
+################################################
+################################################
+################################################
+################################################
+################################################
+
+pame(){}
+oloi(kdkk){}
+dyo(geia, poy){}
+
+name()  {
+    "John"
+}
+
+cond_repeat("yes", name())
+cond_repeat("no", "Jane")
+forari(geia)
+
+name()
+surname()
+fullname(name(), " ", surname())
+
+edo("hdhd")
+eimaiedo("hdhd", "jjjs")
+hdhdforari(kdldgeia(), kdldgeia())
+
+################################################
+################################################
+################################################
+################################################
+################################################
+
+name()  {
+    "John"
+}
+
+surname() {
+    "Doe"
+}
+
+fullname(first_name, sep, last_name) {
+    first_name + sep + last_name
+}
+
+name()
+surname()
+fullname(name(), " ", surname())
+
+Output (Java):
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println(name());
+        System.out.println(surname());
+        System.out.println(fullname(name(), " ", surname()));
+    }
+    
+    public static String name() {
+        return "John";
+    }
+    
+    public static String surname() {
+        return "Doe";
+    }
+    
+    public static String fullname(String first_name, String sep, String last_name) {
+        return first_name + sep + last_name;
+    }
+}
+
+################################################
+################################################
+################################################
+################################################
+################################################
+
+name() {
+    "John"
+}
+
+
+repeat(x) {
+    x + x
+}
+
+cond_repeat(c, x) {
+    if (c prefix "yes")
+        if("yes" prefix c)
+            repeat(x)
+        else
+            x
+    else
+        x
+}
+
+cond_repeat("yes", name())
+cond_repeat("no", "Jane")
+
+################################################
+################################################
+################################################
+################################################
+################################################
+
+findLangType(langName) {
+    if ("Java" prefix langName)
+        if(langName prefix "Java")
+            "Static"
+        else
+            if("script" suffix langName)
+                "Dynamic"
+            else
+                "Unknown"
+    else
+        if ("script" suffix langName)
+            "Probably Dynamic"
+        else
+            "Unknown"
+}
+
+findLangType("Java")
+findLangType("Javascript")
+findLangType("Typescript")

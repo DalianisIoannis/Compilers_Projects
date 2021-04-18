@@ -60,14 +60,12 @@ findLangType(langName) {
 
 name()
 surname()
-fullname(name(), " ", surname())
+fullname(name(), x, surname())
 cond_repeat("yes", name())
 cond_repeat("no", "Jane")
 findLangType("Java")
 findLangType("Javascript")
 findLangType("Typescript")
-
-repeat(x)
 
 
 ###########################################################################################

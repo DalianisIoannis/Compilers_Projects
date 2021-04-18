@@ -68,21 +68,27 @@ call_funs ::=   STR_SENS:an LPAREN call_params:p RPAREN                     {: R
                 | STR_SENS:an LPAREN STR_SENS:p RPAREN                     {: RESULT = "\t\tSystem.out.println(" + an + "(" + p + "));\n"; :}
                 | STR_SENS:an LPAREN STR_SENS:p RPAREN                     {: RESULT = an + p; :}
                 | IDENTIFIER:par                                      {: RESULT = par; :}
-                | STR_SENS:par                                      {: RESULT = par; :}
 */
 
-/*pairnei (())*/
+/*
 call_params     ::= STR_SENS:par LPAREN RPAREN                      {: RESULT = par + "()"; :}
                 | STR_SENS:par22 LPAREN RPAREN COMMA call_params:cp {: RESULT = par22 + "()" + ", " + cp; :}
                 | STRING_LITERAL:par                                {: RESULT = "\"" + par + "\""; :}
-                | STRING_LITERAL:sens COMMA call_params:cp          {: RESULT = "\"" + sens + "\" ," + cp; :}
-                ;
-
-/*
-call_params     ::= call_params:cp LPAREN RPAREN STR_SENS:par   {: RESULT = cp + "()" + par; :}
-                | STR_SENS:par                                 {: RESULT = par; :}
+                | STRING_LITERAL:sens COMMA call_params:cp          {: RESULT = "\"" + sens + "\" ," + cp; :}                
+                | STR_SENS:par                                      {: RESULT = par; :}
                 ;
 */
+
+call_params     ::= call_params:cp COMMA STR_SENS:par      {: RESULT = cp + ", "; :}
+                | call_params:cp COMMA STRING_LITERAL:par   {: RESULT = cp + ", " + par; :}
+                | call_params:cp COMMA STR_SENS:par LPAREN RPAREN   {: RESULT = cp + ", " + "()"; :}
+                | call_params:cp COMMA STR_SENS:par LPAREN call_params:cp1 RPAREN   {: RESULT = cp + ", " + "(" + cp1 + ")"; :}
+                | STR_SENS:par LPAREN RPAREN            {: RESULT = "()"; :}
+                | STR_SENS:par LPAREN call_params:cp RPAREN   {: RESULT = " " + cp; :}
+                | STRING_LITERAL:par                     {: RESULT = "\"" + par + "\""; :}
+                ;
+                
+                // | expr:e1 MINUS expr:e2        {: RESULT = String.format("%s - %s", e1, e2); :}
 
 params      ::= STR_SENS:par                    {: RESULT = "String " + par; :}
             | STR_SENS:par22 COMMA params:par {: RESULT = par22 + ", " + "String " + par; :}
@@ -108,7 +114,6 @@ func_body   ::= ret_stmt:r {:RESULT = r; :}
 ret_stmt ::= STRING_LITERAL:sens                         {:RESULT = "\"" + sens + "\""; :}
             | STR_SENS:par                                  {:RESULT = par; :}
             | ret_stmt:par PLUS STR_SENS:par1              {:RESULT = par + " + " + par1; :}
-
             | STR_SENS:par LPAREN call_params:cp RPAREN                                  {:RESULT = par + "(" + cp + ")"; :}
             | STR_SENS:par LPAREN RPAREN                                  {:RESULT = par + "()"; :}
             ;

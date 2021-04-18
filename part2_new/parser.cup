@@ -1,0 +1,80 @@
+/* Simple +/-/* expression language; parser evaluates constant expressions on the fly*/
+/** Package and Import Specifications */
+
+import java_cup.runtime.*;
+
+/** Usercode Components */
+
+parser code {:
+    // Connect this parser to a scanner!
+    Scanner s;
+    Parser(Scanner s){ this.s=s; }
+:}
+
+/* define how to connect to the scanner! */
+scan with {: return s.next_token(); :};
+
+/** Symbol Lists */
+
+/* Terminals (tokens returned by the scanner). */
+terminal            COMMA, PLUS, LPAREN, RPAREN, LBRACKET, RBRACKET;
+terminal Integer    NUMBER;        // our scanner provides numbers as integers
+terminal String     STRING_LITERAL, IDENTIFIER;
+
+/*  Non terminals */
+non terminal            program;
+non terminal String     declare_functions, call_args, one_func, fnc_body, ret_stmt, fncts_args, call_functions, one_arg, one_cll_fnct;      // used to store evaluated subexpressions
+
+/** Precedence Declarations */
+ 
+// precedence left PLUS;
+// precedence right ;
+
+/** The Grammar Rules */
+
+program ::= declare_functions:df call_functions:cfns {:
+			System.out.println("\n\npublic class Main {");
+			System.out.println("\tpublic static void main(String[] args) {");
+			System.out.printf("%s", cfns);
+			System.out.println("\t}\n");
+            System.out.printf("%s", df);
+			System.out.println("}\n\n");
+			 :}
+	;
+
+declare_functions   ::= declare_functions:df one_func:onf {: RESULT = df + onf; :}
+                    | one_func:onf  {: RESULT = onf; :}
+                    ;
+
+one_func    ::= IDENTIFIER:idf LPAREN fncts_args:fnarg RPAREN fnc_body:bod LBRACKET RBRACKET {: RESULT = "\tpublic static String " + idf + "(" + fnarg + ") {\n" + bod + "}\n\n"; :}
+            | IDENTIFIER:idf LPAREN RPAREN LBRACKET fnc_body:bod RBRACKET {: RESULT = "\tpublic static String " + idf + "() {\n" + bod + "\t}\n\n"; :}
+            ;
+
+
+fncts_args ::= fncts_args:fnargs COMMA IDENTIFIER:onarg {: RESULT = fnargs + ", " + onarg; :}
+            | IDENTIFIER:onarg {: RESULT = onarg; :}
+            ;
+
+
+fnc_body ::= ret_stmt:rts {: RESULT = "\t\t return " + rts + ";\n"; :}
+            ;
+
+ret_stmt ::= STRING_LITERAL:onarg {: RESULT = "\"" + onarg + "\""; :}
+            ;
+// tis kliseis mesa sth main prota
+
+call_functions ::= call_functions:cfns one_cll_fnct:one_cl {: RESULT = cfns + one_cl; :}
+                | one_cll_fnct:one_cl {: RESULT = one_cl; :}
+                ;
+
+one_cll_fnct ::= IDENTIFIER:idf LPAREN call_args:clarg RPAREN {: RESULT = "\t\tSystem.out.println(" + idf + "(" + clarg + "));\n"; :}
+            | IDENTIFIER:idf LPAREN RPAREN {: RESULT = "\t\tSystem.out.println(" + idf + "());\n"; :}
+            ;
+
+call_args ::= call_args:clarg COMMA STRING_LITERAL:strl {: RESULT = clarg + ", \"" + strl + "\""; :}
+            | STRING_LITERAL:onarg {: RESULT = "\"" + onarg + "\""; :}
+            | call_args:clarg COMMA IDENTIFIER:strl LPAREN RPAREN {: RESULT = clarg + ", " + strl + "()"; :}
+            | IDENTIFIER:idf LPAREN RPAREN {: RESULT = idf + "()"; :}
+            // | IDENTIFIER:idf {: RESULT = ""; :}
+            | call_args:clarg COMMA IDENTIFIER:strl {: RESULT = clarg + ", \"" + strl + "\""; :}
+            ;
