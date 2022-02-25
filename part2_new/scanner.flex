@@ -67,6 +67,8 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
    or just a zero.  */
 dec_int_lit = 0 | [1-9][0-9]*
 
+RParenLBrkt    = ")" {WhiteSpace}* "{"
+
 %state STRING
 
 %%
@@ -78,8 +80,13 @@ dec_int_lit = 0 | [1-9][0-9]*
    "("            { return symbol(sym.LPAREN); }
    ")"            { return symbol(sym.RPAREN); }
 
-   "{"            { return symbol(sym.LBRACKET); }
    "}"            { return symbol(sym.RBRACKET); }
+
+   "if"           { return symbol(sym.IF); }
+   "else"         { return symbol(sym.ELSE); }
+
+   "prefix"       { return symbol(sym.PREFIX); }
+   "suffix"       { return symbol(sym.SUFFIX); }
 
    ","            { return symbol(sym.COMMA); }
    {dec_int_lit}  { return symbol(sym.NUMBER, new Integer(yytext())); }
@@ -98,7 +105,8 @@ dec_int_lit = 0 | [1-9][0-9]*
       \\                             { stringBuffer.append('\\'); }
 }
 
-{Identifier} { return symbol(sym.IDENTIFIER, new String(yytext())); }
+{Identifier}         { return symbol(sym.IDENTIFIER, new String(yytext())); }
+{RParenLBrkt}        { return symbol(sym.RPAREN_LBRACK, yytext()); }
 
 /* No token was found for the input so throw an error.  Print out an
    Illegal character message with the illegal character that was found. */

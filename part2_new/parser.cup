@@ -17,64 +17,117 @@ scan with {: return s.next_token(); :};
 /** Symbol Lists */
 
 /* Terminals (tokens returned by the scanner). */
-terminal            COMMA, PLUS, LPAREN, RPAREN, LBRACKET, RBRACKET;
+terminal            COMMA, PLUS, LPAREN, RPAREN, RBRACKET, RPAREN_LBRACK, IF, ELSE, PREFIX, SUFFIX;
 terminal Integer    NUMBER;        // our scanner provides numbers as integers
 terminal String     STRING_LITERAL, IDENTIFIER;
 
 /*  Non terminals */
 non terminal            program;
-non terminal String     declare_functions, call_args, one_func, fnc_body, ret_stmt, fncts_args, call_functions, one_arg, one_cll_fnct;      // used to store evaluated subexpressions
+non terminal String     goal_main, declare_functions, call_args, no_idf_in_call_fun, system_printer, one_func, fnc_body, ret_stmt, fncts_args, call_functions, condition, one_cll_fnct, if_stmt;      // used to store evaluated subexpressions
 
 /** Precedence Declarations */
  
-// precedence left PLUS;
-// precedence right ;
+precedence left COMMA, LPAREN, RPAREN, RBRACKET, RPAREN_LBRACK, IF, ELSE, PREFIX, SUFFIX;
+precedence right PLUS;
 
 /** The Grammar Rules */
 
-program ::= declare_functions:df call_functions:cfns {:
-			System.out.println("\n\npublic class Main {");
-			System.out.println("\tpublic static void main(String[] args) {");
-			System.out.printf("%s", cfns);
-			System.out.println("\t}\n");
-            System.out.printf("%s", df);
-			System.out.println("}\n\n");
-			 :}
-	;
+// program ::= declare_functions:df call_functions:cfns {:
+program ::= goal_main:df    {: System.out.printf("%s", df); :}
+	                        ;
 
-declare_functions   ::= declare_functions:df one_func:onf {: RESULT = df + onf; :}
-                    | one_func:onf  {: RESULT = onf; :}
+goal_main   ::= declare_functions:df call_functions:cfns    {: RESULT = "\n\n\npublic class Main {\n\tpublic static void main(String[] args) {\n" + cfns + "\t}\n" + df + "}\n\n"; :}
+            |   call_functions:cfns                         {: RESULT = "\n\n\npublic class Main {\n\tpublic static void main(String[] args) {\n" + cfns + "\t}\n}\n\n"; :}
+            ;
+
+declare_functions   ::= declare_functions:df one_func:onf       {: RESULT = df + onf; :}
+                    |   one_func:onf                            {: RESULT = onf; :}
                     ;
 
-one_func    ::= IDENTIFIER:idf LPAREN fncts_args:fnarg RPAREN fnc_body:bod LBRACKET RBRACKET {: RESULT = "\tpublic static String " + idf + "(" + fnarg + ") {\n" + bod + "}\n\n"; :}
-            | IDENTIFIER:idf LPAREN RPAREN LBRACKET fnc_body:bod RBRACKET {: RESULT = "\tpublic static String " + idf + "() {\n" + bod + "\t}\n\n"; :}
+one_func    ::= IDENTIFIER:idf LPAREN fncts_args:fnarg RPAREN_LBRACK fnc_body:bod RBRACKET      {: RESULT = "\tpublic static String " + idf + "(" + fnarg + ") {\n\t\treturn (" + bod + ");\n\t}\n\n"; :}
+            |   IDENTIFIER:idf LPAREN RPAREN_LBRACK fnc_body:bod RBRACKET                       {: RESULT = "\tpublic static String " + idf + "() {\n\t\treturn (" + bod + ");\n\t}\n\n"; :}
+            // |   {: RESULT = ""; :}
             ;
 
-
-fncts_args ::= fncts_args:fnargs COMMA IDENTIFIER:onarg {: RESULT = fnargs + ", " + onarg; :}
-            | IDENTIFIER:onarg {: RESULT = onarg; :}
+fncts_args  ::= IDENTIFIER:idf COMMA fncts_args:fnargs    {: RESULT = "String " + idf + ", " + fnargs; :}
+            |   IDENTIFIER:idf                            {: RESULT = "String " + idf; :}
             ;
 
-
-fnc_body ::= ret_stmt:rts {: RESULT = "\t\t return " + rts + ";\n"; :}
+fnc_body    ::= ret_stmt:rts            {: RESULT = rts; :}
+            |   if_stmt:ifstmt          {: RESULT = ifstmt; :}
             ;
 
-ret_stmt ::= STRING_LITERAL:onarg {: RESULT = "\"" + onarg + "\""; :}
+if_stmt ::= IF LPAREN condition:cond RPAREN fnc_body:fb ELSE fnc_body:fb2 {:RESULT = "(" + cond + ") ? " + fb + " : " + fb2 + ""; :}
             ;
-// tis kliseis mesa sth main prota
 
-call_functions ::= call_functions:cfns one_cll_fnct:one_cl {: RESULT = cfns + one_cl; :}
-                | one_cll_fnct:one_cl {: RESULT = one_cl; :}
+condition   ::= IDENTIFIER:idf                      {: RESULT = idf; :}
+
+            |   ret_stmt:strlit PREFIX ret_stmt:idf {: RESULT = "(" + idf + ").startsWith(" + strlit + ")"; :}
+            |   ret_stmt:strlit SUFFIX ret_stmt:idf {: RESULT = "(" + idf + ").endsWith(" + strlit + ")"; :}
+
+            |   ret_stmt:strlit SUFFIX if_stmt:idf  {: RESULT = "(" + idf + ").endsWith(" + strlit + ")"; :}
+
+            |   if_stmt:ifds                        {: RESULT = ifds; :}
+            |   if_stmt:ifds SUFFIX ret_stmt:idf    {: RESULT = "(" + idf + ").endsWith(" + ifds + ")"; :}
+            ;
+
+ret_stmt    ::= STRING_LITERAL:strlit                               {: RESULT = "\"" + strlit + "\""; :}
+            |   IDENTIFIER:idf                                      {: RESULT = idf; :}
+            
+            |   ret_stmt:rtstm COMMA IDENTIFIER:idf                  {: RESULT = rtstm + ", " + idf; :}
+
+            |   ret_stmt:rtstm PLUS IDENTIFIER:idf                  {: RESULT = rtstm + " + " + idf; :}
+            |   ret_stmt:rtstm PLUS STRING_LITERAL:strlit           {: RESULT = rtstm + " + \"" + strlit + "\""; :}
+            
+            |   STRING_LITERAL:strlit PLUS ret_stmt:rtstm           {: RESULT = "(\"" + strlit + "\" + " + rtstm +")"; :}
+            
+            |   IDENTIFIER:idf LPAREN RPAREN                        {: RESULT = idf + "()"; :}
+            |   ret_stmt:rtstm PLUS IDENTIFIER:idf LPAREN RPAREN    {: RESULT = "(" + rtstm + " + " + idf + "())"; :}
+            
+            |   IDENTIFIER:idf LPAREN call_args:args RPAREN                        {: RESULT = idf + "(" +args + ")"; :}
+            |   ret_stmt:rtstm PLUS IDENTIFIER:idf LPAREN call_args:args RPAREN    {: RESULT = rtstm + " + " + idf + "(" +args + ")"; :}
+
+            // |   IDENTIFIER:idf LPAREN call_args:args RPAREN                        {: RESULT = idf + "(" +args + ")"; :}
+            // |   ret_stmt:rtstm PLUS IDENTIFIER:idf LPAREN call_args:args RPAREN    {: RESULT = rtstm + " + " + idf + "(" +args + ")"; :}
+
+            |   STRING_LITERAL:strlit PLUS if_stmt:idf              {: RESULT = "\"" + strlit + "\"" + " + (" + idf + ")"; :}
+
+            |   IDENTIFIER:idf LPAREN no_idf_in_call_fun:args RPAREN                        {: RESULT = idf + "(" +args + ")"; :}
+            |   ret_stmt:rtstm PLUS IDENTIFIER:idf LPAREN no_idf_in_call_fun:args RPAREN    {: RESULT = rtstm + " + " + idf + "(" +args + ")"; :}
+            ;
+
+no_idf_in_call_fun  ::= IDENTIFIER:idf COMMA no_idf_in_call_fun:no_idf  {: RESULT = idf + ", " + no_idf; :}
+                    |   IDENTIFIER:idf                                  {: RESULT = idf; :}
+                    ;
+
+call_functions  ::= call_functions:cfns system_printer:one_cl     {: RESULT = cfns + one_cl; :}
+                |   system_printer:one_cl                         {: RESULT = one_cl; :}
                 ;
 
-one_cll_fnct ::= IDENTIFIER:idf LPAREN call_args:clarg RPAREN {: RESULT = "\t\tSystem.out.println(" + idf + "(" + clarg + "));\n"; :}
-            | IDENTIFIER:idf LPAREN RPAREN {: RESULT = "\t\tSystem.out.println(" + idf + "());\n"; :}
-            ;
+system_printer  ::= one_cll_fnct:ocf    {: RESULT = "\t\tSystem.out.println(" + ocf + ");\n"; :}
+                ;
 
-call_args ::= call_args:clarg COMMA STRING_LITERAL:strl {: RESULT = clarg + ", \"" + strl + "\""; :}
-            | STRING_LITERAL:onarg {: RESULT = "\"" + onarg + "\""; :}
-            | call_args:clarg COMMA IDENTIFIER:strl LPAREN RPAREN {: RESULT = clarg + ", " + strl + "()"; :}
-            | IDENTIFIER:idf LPAREN RPAREN {: RESULT = idf + "()"; :}
-            // | IDENTIFIER:idf {: RESULT = ""; :}
-            | call_args:clarg COMMA IDENTIFIER:strl {: RESULT = clarg + ", \"" + strl + "\""; :}
+one_cll_fnct    ::= IDENTIFIER:idf LPAREN call_args:clarg RPAREN    {: RESULT = idf + "(" + clarg + ")"; :}
+                |   IDENTIFIER:idf LPAREN RPAREN                    {: RESULT = idf + "()"; :}
+                |   if_stmt:one_cl                                  {: RESULT = one_cl; :}
+                |   STRING_LITERAL:strlit                           {: RESULT = "\"" + strlit + "\""; :}
+                |   STRING_LITERAL:strlit PLUS one_cll_fnct:oncll   {: RESULT = "\"" + strlit + "\" + (" + oncll + ")"; :}
+                ;
+
+call_args ::= STRING_LITERAL:strl COMMA call_args:clarg             {: RESULT = "\"" + strl + "\", " + clarg; :}
+            | STRING_LITERAL:strl                                   {: RESULT = "\"" + strl + "\""; :}
+            
+            | IDENTIFIER:idf LPAREN RPAREN COMMA call_args:clarg    {: RESULT = idf + "(), " + clarg; :}
+            | IDENTIFIER:idf LPAREN RPAREN                          {: RESULT = idf + "()"; :}
+            
+            | IDENTIFIER:idf LPAREN call_args:clarg RPAREN          {: RESULT = idf + "(" + clarg + ")"; :}
+            // | IDENTIFIER:idf                                        {: RESULT = idf; :}
+            
+            | if_stmt:ifstmt                                        {: RESULT = ifstmt; :}
+            | if_stmt:ifstmt COMMA call_args:clarg                  {: RESULT = ifstmt + ", " + clarg; :}
+
+            | IDENTIFIER:idf PLUS call_args:clarg                   {: RESULT = "(" + idf + ")" + " + (" + clarg + ")"; :}
+            | IDENTIFIER:idf COMMA call_args:clarg                  {: RESULT = idf + ", " + clarg; :}
+
+            // | no_idf_in_call_fun:nidf                               {: RESULT = nidf; :}
             ;
