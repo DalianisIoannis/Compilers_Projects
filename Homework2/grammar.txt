@@ -1,0 +1,154 @@
+
+Goal	::=	MainClass ( TypeDeclaration )* <EOF>
+
+
+MainClass	::=	"class" Identifier "{" "public" "static" "void" "main" "(" "String" "[" "]" Identifier ")" "{" ( VarDeclaration )* ( Statement )* "}" "}"
+
+
+TypeDeclaration	::=	ClassDeclaration
+|	ClassExtendsDeclaration
+
+
+ClassDeclaration	::=	"class" Identifier "{" ( VarDeclaration )* ( MethodDeclaration )* "}"
+
+
+ClassExtendsDeclaration	::=	"class" Identifier "extends" Identifier "{" ( VarDeclaration )* ( MethodDeclaration )* "}"
+
+
+VarDeclaration	::=	Type Identifier ";"
+
+
+MethodDeclaration	::=	"public" Type Identifier "(" ( FormalParameterList )? ")" "{" ( VarDeclaration )* ( Statement )* "return" Expression ";" "}"
+
+
+FormalParameterList	::=	FormalParameter ( FormalParameterRest )*
+
+
+FormalParameter	::=	Type Identifier
+
+
+FormalParameterRest	::=	"," FormalParameter
+
+
+Type	::=	ArrayType
+|	BooleanType
+|	IntegerType
+|	Identifier
+
+
+ArrayType	::=	"int" "[" "]"
+
+
+BooleanType	::=	"boolean"
+
+
+IntegerType	::=	"int"
+
+
+Statement	::=	Block				return "true" or Expression type
+		|	AssignmentStatement		return "true"
+		|	ArrayAssignmentStatement	return "true"
+		|	IfStatement			return "true"
+		|	WhileStatement			return "true"
+		|	PrintStatement			return Expression type
+
+
+Block	::=	"{" ( Statement )* "}"			return "true" or Expression type
+
+
+AssignmentStatement	 ::=	Identifier "=" Expression ";"	return "true"
+
+
+ArrayAssignmentStatement ::=	Identifier "[" Expression "]" 
+				"=" Expression ";"		return "true"
+
+
+IfStatement	::=	"if" "(" Expression ")" Statement
+			"else" Statement			return "true"
+
+
+WhileStatement	::=	"while" "(" Expression ")" Statement	return "true"
+
+
+PrintStatement	::=	"System.out.println" 
+			"(" Expression ")" ";"			return Expression type
+
+
+Expression	::=	AndExpression		return "boolean"
+		|	CompareExpression	return "boolean"
+		|	PlusExpression		return "int"
+		|	MinusExpression		return "int"
+		|	TimesExpression		return "int"
+		|	ArrayLookup		return "int"
+		|	ArrayLength		return "int"
+		|	MessageSend 		return Identifier type
+
+
+AndExpression	::=	PrimaryExpression "&&" PrimaryExpression	return "boolean"
+
+
+CompareExpression	::=	PrimaryExpression "<" PrimaryExpression	return "boolean"
+
+
+PlusExpression	::=	PrimaryExpression "+" PrimaryExpression		return "int"
+
+
+MinusExpression	::=	PrimaryExpression "-" PrimaryExpression		return "int"
+
+
+TimesExpression	::=	PrimaryExpression "*" PrimaryExpression		return "int"
+
+
+ArrayLookup	::=	PrimaryExpression "[" PrimaryExpression "]"	return "int"
+
+
+ArrayLength	::=	PrimaryExpression "." "length"			return "int"
+
+
+MessageSend	::=	PrimaryExpression "." 				return Identifier type
+			Identifier 
+			"(" ( ExpressionList )? ")"
+
+
+ExpressionList	::=	Expression ( ExpressionTail )*
+
+
+ExpressionTerm	::=	"," Expression			return Expression()
+
+
+PrimaryExpression	::=	IntegerLiteral		return "int"
+			|	TrueLiteral		return "boolean"
+			|	FalseLiteral		return "boolean"
+			|	Identifier		return IDENTIFIER
+			|	ThisExpression		return "this"
+			|	ArrayAllocationExpression	return "int[]"
+			|	AllocationExpression		return Identifier type
+			|	BracketExpression		return Expression()
+			| 	NotExpression			return "boolean"
+
+
+IntegerLiteral		::=	<INTEGER_LITERAL>	return "int"
+
+
+TrueLiteral		::=	"true"		return "boolean"
+
+
+FalseLiteral		::=	"false"		return "boolean"
+
+
+Identifier		::=	<IDENTIFIER>	return IDENTIFIER
+
+
+ThisExpression		::=	"this"		return "this"
+
+
+ArrayAllocationExpression	::=	"new" "int" "[" Expression "]"	return "int[]"
+
+
+AllocationExpression	::=	"new" Identifier "(" ")"	return Identifier type
+
+
+NotExpression		::=	"!" PrimaryExpression()		return "boolean"
+
+
+BracketExpression	::=	"(" Expression ")"		return Expression()
